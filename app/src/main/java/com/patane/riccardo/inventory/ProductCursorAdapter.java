@@ -2,19 +2,22 @@ package com.patane.riccardo.inventory;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
 import android.widget.TextView;
 
-import com.patane.riccardo.inventory.data.ProductContract;
+import com.patane.riccardo.inventory.data.ProductContract.ProductEntry;
 
 /**
  * Created by riccardo on 27.02.17.
  */
 
 public class ProductCursorAdapter extends CursorAdapter {
+
+    private static final String LOG_TAG = ProductCursorAdapter.class.getSimpleName();
     /**
      * Recommended constructor.
      *
@@ -55,9 +58,9 @@ public class ProductCursorAdapter extends CursorAdapter {
         TextView quantityTextView = (TextView) view.findViewById(R.id.quantity);
         TextView priceTextView = (TextView) view.findViewById(R.id.price);
 
-        String name = cursor.getString(cursor.getColumnIndexOrThrow(ProductContract.ProductEntry.COLUMN_NAME));
-        String quantity = cursor.getString(cursor.getColumnIndexOrThrow(ProductContract.ProductEntry.COLUMN_QUANTITY));
-        String price = cursor.getString(cursor.getColumnIndexOrThrow(ProductContract.ProductEntry.COLUMN_PRICE));
+        String name = cursor.getString(cursor.getColumnIndexOrThrow(ProductEntry.COLUMN_NAME));
+        String quantity = cursor.getString(cursor.getColumnIndexOrThrow(ProductEntry.COLUMN_QUANTITY));
+        String price = cursor.getString(cursor.getColumnIndexOrThrow(ProductEntry.COLUMN_PRICE));
 
         nameTextView.setText(name);
         quantityTextView.setText(quantity);
