@@ -1,6 +1,7 @@
 package com.patane.riccardo.inventory;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -9,6 +10,8 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -44,6 +47,8 @@ public class InputProductActivity extends AppCompatActivity {
         mQuantityEditText = (EditText) findViewById(R.id.input_quantity);
         mPriceEditText = (EditText) findViewById(R.id.input_price);
         mSupplierEditText = (EditText) findViewById(R.id.input_supplier);
+
+        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
     }
 
     @Override
