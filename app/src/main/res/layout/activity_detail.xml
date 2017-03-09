@@ -43,7 +43,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight=".5"
                 android:gravity="right"
-                android:hint="@string/qty"
+                android:hint="0"
                 android:inputType="number"
                 android:textSize="24sp" />
 
@@ -70,7 +70,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight=".6"
                 android:gravity="left"
-                android:hint="@string/price"
+                android:hint="0.00"
+                android:inputType="numberDecimal"
                 android:textSize="24sp" />
 
 

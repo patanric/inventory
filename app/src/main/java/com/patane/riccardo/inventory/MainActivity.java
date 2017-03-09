@@ -1,23 +1,25 @@
 package com.patane.riccardo.inventory;
 
 import android.app.LoaderManager;
+import android.content.ContentUris;
 import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
+import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.patane.riccardo.inventory.data.ProductContract.ProductEntry;
-import com.patane.riccardo.inventory.data.ProductDbHelper;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    private static final String LOG_TAG = MainActivity.class.getSimpleName();
     private final int LOADER_ID = 5;
     private ProductCursorAdapter productCursorAdapter;
 
@@ -45,6 +47,15 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         listView.setAdapter(productCursorAdapter);
 
         getLoaderManager().initLoader(LOADER_ID, null, this);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Uri uri = ContentUris.withAppendedId(ProductEntry.CONTENT_URI, id);
+                Intent intent = new Intent(MainActivity.this, DetailActivity.class).setData(uri);
+                startActivity(intent);
+            }
+        });
     }
 
     @Override

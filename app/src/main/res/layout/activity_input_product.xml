@@ -98,7 +98,7 @@
                 android:id="@+id/input_price"
                 style="@style/EditorFieldStyle"
                 android:hint="price"
-                android:inputType="number" />
+                android:inputType="numberDecimal" />
         </LinearLayout>
 
     </LinearLayout>
