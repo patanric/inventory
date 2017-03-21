@@ -157,6 +157,8 @@ public class InputProductActivity extends AppCompatActivity {
         contentValues.put(ProductEntry.COLUMN_QUANTITY, quantityString);
         contentValues.put(ProductEntry.COLUMN_PRICE, priceString);
         contentValues.put(ProductEntry.COLUMN_SUPPLIER, supplierString);
+        contentValues.put(ProductEntry.COLUMN_IMAGE, mCurrentPhotoPath);
+
 
         Uri newUri = null;
         newUri = getContentResolver().insert(ProductEntry.CONTENT_URI, contentValues);
