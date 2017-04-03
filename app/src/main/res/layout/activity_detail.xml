@@ -7,12 +7,27 @@
     android:orientation="vertical"
     tools:context="com.patane.riccardo.inventory.DetailActivity">
 
-    <ImageView
-        android:id="@+id/detail_image"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        tools:src="@drawable/ic_add_white_24dp" />
+        android:layout_weight="1">
+
+        <ImageView
+            android:id="@+id/detail_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/darker_gray" />
+
+        <TextView
+            android:id="@+id/detail_add_pic"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="Click here to add a picture"
+            android:textSize="24sp" />
+
+    </RelativeLayout>
+
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -55,7 +70,6 @@
                 android:text="@string/pcs"
                 android:textSize="24sp" />
 
-            
 
             <TextView
                 android:layout_width="0dp"
