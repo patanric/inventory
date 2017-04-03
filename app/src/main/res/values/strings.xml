@@ -11,4 +11,10 @@
     <string name="supplier_name">supplier: name</string>
     <string name="product_saved">Product saved</string>
     <string name="error_product_saving">Error product saving</string>
+    <string name="delete">Delete</string>
+    <string name="save">Save</string>
+    <string name="delete_product_successfully">Delete Product successfully</string>
+    <string name="delete_products_failed">Delete Products failed</string>
+    <string name="dele_this_product">Delete this Product?</string>
+    <string name="cancel">Cancel</string>
 </resources>

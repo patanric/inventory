@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import android.widget.Toast;
 
 import static android.R.attr.y;
 
@@ -88,8 +89,8 @@ public class ProductProvider extends ContentProvider {
     @Nullable
     @Override
     public Uri insert(Uri uri, ContentValues values) {
-//        Log.v(LOG_TAG, "TEST: " + uri);
         int match = sUriMatcher.match(uri);
+
         switch (match) {
             case PRODUCTS:
                 return insertProduct(uri, values);
@@ -101,7 +102,7 @@ public class ProductProvider extends ContentProvider {
     private Uri insertProduct(Uri uri, ContentValues values) {
         // Check that the name is not null
         String name = values.getAsString(ProductContract.ProductEntry.COLUMN_NAME);
-        if (name == null) {
+        if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("Product requires a name");
         }
 
@@ -121,11 +122,105 @@ public class ProductProvider extends ContentProvider {
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        return 0;
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+        int rowsDeleted;
+
+        int match = sUriMatcher.match(uri);
+        switch (match) {
+            case PRODUCTS:
+                // Delete all rows that match the selection and selection args
+                rowsDeleted = db.delete(ProductContract.ProductEntry.TABLE_NAME, selection, selectionArgs);
+                if (rowsDeleted > 0) {
+                    getContext().getContentResolver().notifyChange(uri, null);
+                }
+                break;
+            case PRODUCTS_ID:
+                // Delete a single row given by the ID in the URI
+                selection = ProductContract.ProductEntry._ID + "=?";
+                selectionArgs = new String[] {String.valueOf(ContentUris.parseId(uri))};
+                rowsDeleted = db.delete(ProductContract.ProductEntry.TABLE_NAME, selection, selectionArgs);
+                if (rowsDeleted > 0) {
+                    getContext().getContentResolver().notifyChange(uri, null);
+                }
+                break;
+            default:
+                throw new IllegalArgumentException("Deletion is not supported for " + uri);
+        }
+        return rowsDeleted;
     }
 
     @Override
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
-        return 0;
+        int match = sUriMatcher.match(uri);
+        switch (match) {
+            case PRODUCTS:
+                return updateProduct(uri, values, selection, selectionArgs);
+            case PRODUCTS_ID:
+                // For the PET_ID code, extract out the ID from the URI,
+                // so we know which row to update. Selection will be "_id=?" and selection
+                // arguments will be a String array containing the actual ID.
+                selection = ProductContract.ProductEntry._ID + "=?";
+                selectionArgs = new String[] {String.valueOf(ContentUris.parseId(uri))};
+                return updateProduct(uri, values, selection, selectionArgs);
+            default:
+                throw new IllegalArgumentException("Update is not supported for " + uri);
+        }
+    }
+
+    /**
+     * Update products in the database with the given content values. Apply the changes to the rows
+     * specified in the selection and selection arguments (which could be 0 or 1 or more pets).
+     * Return the number of rows that were successfully updated.
+     */
+    private int updateProduct(Uri uri, ContentValues contentValues, String selection, String[] selectionArgs) {
+
+        Log.v(LOG_TAG, "TEST contentValues: " + contentValues.toString());
+
+        // If there are no values to update, then don't try to update the database
+        if (contentValues.size() == 0) {
+            return 0;
+        }
+
+        // Check that the name is not null
+        if (contentValues.containsKey(ProductContract.ProductEntry.COLUMN_NAME)) {
+            String name = contentValues.getAsString(ProductContract.ProductEntry.COLUMN_NAME);
+            if (name == null || name.isEmpty()) {
+                throw new IllegalArgumentException("Product requires valid name");
+            }
+        }
+
+        // check that price is not null
+        if (contentValues.containsKey(ProductContract.ProductEntry.COLUMN_PRICE)) {
+            Float price = contentValues.getAsFloat(ProductContract.ProductEntry.COLUMN_PRICE);
+            if (price == null) {
+                throw new IllegalArgumentException("Product requires valid price");
+            }
+        }
+
+        // Check that the quantity is not null
+        if (contentValues.containsKey(ProductContract.ProductEntry.COLUMN_QUANTITY)) {
+            Integer quantity = contentValues.getAsInteger(ProductContract.ProductEntry.COLUMN_QUANTITY);
+            if (quantity == null) {
+                throw new IllegalArgumentException("Product requires valid quantity");
+            }
+        }
+
+        // Check that the supplier is not null
+        if (contentValues.containsKey(ProductContract.ProductEntry.COLUMN_SUPPLIER)) {
+            String supplier = contentValues.getAsString(ProductContract.ProductEntry.COLUMN_SUPPLIER);
+            if (supplier == null || supplier.isEmpty()) {
+                throw new IllegalArgumentException("Product requires valid supplier");
+            }
+        }
+
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+
+        int rowsUpdated = db.update(ProductContract.ProductEntry.TABLE_NAME, contentValues, selection, selectionArgs);
+
+        if (rowsUpdated > 0) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+
+        return rowsUpdated;
     }
 }
