@@ -106,6 +106,21 @@ public class ProductProvider extends ContentProvider {
             throw new IllegalArgumentException("Product requires a name");
         }
 
+        Float price = values.getAsFloat(ProductContract.ProductEntry.COLUMN_PRICE);
+        if (price == null) {
+            throw new IllegalArgumentException("Product requires valid price");
+        }
+
+        Integer quantity = values.getAsInteger(ProductContract.ProductEntry.COLUMN_QUANTITY);
+        if (quantity == null) {
+            throw new IllegalArgumentException("Product requires valid quantity");
+        }
+
+        String supplier = values.getAsString(ProductContract.ProductEntry.COLUMN_SUPPLIER);
+        if (supplier == null || supplier.isEmpty()) {
+            throw new IllegalArgumentException("Product requires valid supplier");
+        }
+
         SQLiteDatabase db = mDbHelper.getReadableDatabase();
         long id = db.insert(ProductContract.ProductEntry.TABLE_NAME, null, values);
         if (id == -1) {

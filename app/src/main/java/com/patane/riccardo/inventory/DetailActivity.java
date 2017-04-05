@@ -10,6 +10,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -49,6 +50,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     private TextView mClickHere;
 
     private static final int CAMERA_REQUEST = 1555;
+    private static final int PICK_IMAGE = 34;
     private final int LOADER_ID = 6;
 
     // variable to notify if field have changed.
@@ -75,26 +77,50 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     private View.OnClickListener fotoClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-            // Ensure that there's a camera activity to handle the intent
-            if (cameraIntent.resolveActivity(getPackageManager()) != null) {
-                File photoFile = null;
-                try {
-                    photoFile = createImageFile();
-                } catch (IOException ex) {
-                    Log.e(LOG_TAG, "Error occurred while creating the File", ex);
-                }
-                // Continue only if the File was successfully created
-                if (photoFile != null) {
-                    Uri photoUri = FileProvider.getUriForFile(DetailActivity.this, "com.patane.riccardo.fileprovider", photoFile);
-                    cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
-                    startActivityForResult(cameraIntent, CAMERA_REQUEST);
-                }
+            pickImage();
+        }
+    };
 
-            }
+    private DialogInterface.OnClickListener galleryButtonClickListener = new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            pickGallery();
+        }
+    };
+
+    private DialogInterface.OnClickListener camButtonClickListener = new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            pickCamera();
         }
     };
     // END of class variables
+
+    private void pickCamera() {
+        Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+        // Ensure that there's a camera activity to handle the intent
+        if (cameraIntent.resolveActivity(getPackageManager()) != null) {
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                Log.e(LOG_TAG, "Error occurred while creating the File", ex);
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                Uri photoUri = FileProvider.getUriForFile(DetailActivity.this, "com.patane.riccardo.fileprovider", photoFile);
+                cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+                startActivityForResult(cameraIntent, CAMERA_REQUEST);
+            }
+        }
+    }
+
+    private void pickGallery() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,6 +128,15 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         setContentView(R.layout.activity_detail);
 
         mCurrentProductUri = getIntent().getData();
+        if (mCurrentProductUri == null) {
+            setTitle(getResources().getString(R.string.detail_activity_title_new_product));
+            // Invalidate the options menu, so the "Delete" menu option can be hidden.
+            // (It doesn't make sense to delete a pet that hasn't been created yet.)
+            invalidateOptionsMenu();
+        } else {
+            setTitle(getResources().getString(R.string.detail_activity_title_edit_product));
+            getLoaderManager().initLoader(LOADER_ID, null, this);
+        }
 
         mNameEditText = (EditText) findViewById(R.id.product_name);
         mNameEditText.setOnTouchListener(mTouchListener);
@@ -114,12 +149,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
         mImageView = (ImageView) findViewById(R.id.detail_image);
         mClickHere = (TextView) findViewById(R.id.detail_add_pic);
-
-
-        getLoaderManager().initLoader(LOADER_ID, null, this);
-
         mClickHere.setOnClickListener(fotoClickListener);
-
     }
 
     @Override
@@ -127,6 +157,40 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         if (requestCode == CAMERA_REQUEST && resultCode == RESULT_OK) {
             loadImageFromFile();
         }
+        if (requestCode == PICK_IMAGE && resultCode == RESULT_OK) {
+
+            // SDK < API11
+            if (Build.VERSION.SDK_INT < 11) {
+                Log.v(LOG_TAG, "VERSION < 11");
+                imagePath = RealPathUtils.getRealPathFromURI_BelowAPI11(this, data.getData());
+            }
+                // SDK >= 11 && SDK < 19
+            else if (Build.VERSION.SDK_INT < 19) {
+                Log.v(LOG_TAG, "VERSION 11-18");
+                imagePath = RealPathUtils.getRealPathFromURI_API11to18(this, data.getData());
+            }
+                // SDK > 19 (Android 4.4)
+            else{
+                Log.v(LOG_TAG, "VERSION 19+");
+                imagePath = RealPathUtils.getRealPathFromURI_API19(this, data.getData());
+            }
+
+            loadImageFromFile();
+        }
+    }
+
+    private String getRealPathFromURI(Uri contentURI) {
+        String result;
+        Cursor cursor = getContentResolver().query(contentURI, null, null, null, null);
+        if (cursor == null) { // Source is Dropbox or other similar local file path
+            result = contentURI.getPath();
+        } else {
+            cursor.moveToFirst();
+            int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+            result = cursor.getString(idx);
+            cursor.close();
+        }
+        return result;
     }
 
     private File createImageFile() throws IOException {
@@ -147,6 +211,18 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_detail, menu);
+        return true;
+    }
+
+    // onPrepareOptionsMenu is called after a options menu invalidation (invalidateOptionsMenu()).
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+        // If this is a new pet, hide the "Delete" menu item.
+        if (mCurrentProductUri == null) {
+            MenuItem menuItem = menu.findItem(R.id.action_delete);
+            menuItem.setVisible(false);
+        }
         return true;
     }
 
@@ -222,6 +298,19 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         alertDialog.show();
     }
 
+    // create a "discard changes" dialog:
+    private void pickImage() {
+        // Create an AlertDialog.Builder and set the message, and click listeners
+        // for the positive and negative buttons on the dialog.
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder.setMessage("Where do you want the image from?");
+        dialogBuilder.setPositiveButton("Gallery", galleryButtonClickListener);
+        dialogBuilder.setNegativeButton("Take picture", camButtonClickListener);
+        // Create and show the AlertDialog
+        AlertDialog alertDialog = dialogBuilder.create();
+        alertDialog.show();
+    }
+
     private void saveItem() {
         String nameString = mNameEditText.getText().toString().trim();
         String quantityString = mQuantityEditText.getText().toString().trim();
@@ -235,13 +324,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             finish();
 
         } else {
-//            String productName = nameString;
-//            String quantity = quantityString;
-//            int weight = 0;
-//            if (!TextUtils.isEmpty(weightString)) {
-//                weight = Integer.parseInt(weightString);
-//            }
-
             ContentValues contentValues = new ContentValues();
             contentValues.put(ProductEntry.COLUMN_NAME, nameString);
             contentValues.put(ProductEntry.COLUMN_QUANTITY, quantityString);
@@ -254,23 +336,25 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
             mCurrentProductUri = getIntent().getData();
             if (mCurrentProductUri == null) {
-//                newUri = getContentResolver().insert(ProductEntry.CONTENT_URI, contentValues);
-                Log.e(LOG_TAG, "This part of the IF statement was not supposed to be used for this activity.");
-            } else {
                 try {
-                    rowsAffected = getContentResolver().update(mCurrentProductUri, contentValues, null, null);
-
-                    // Display Toast after change was made.
-                    if (newUri != null || rowsAffected > 0) {
-                        Toast.makeText(getApplicationContext(), R.string.product_saved, Toast.LENGTH_LONG).show();
-                        finish();
-                    } else {
-                        Toast.makeText(getApplicationContext(), R.string.error_product_saving, Toast.LENGTH_LONG).show();
-                    }
-
+                    newUri = getContentResolver().insert(ProductEntry.CONTENT_URI, contentValues);
                 } catch (IllegalArgumentException e) {
                     Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                 }
+            } else {
+                try {
+                    rowsAffected = getContentResolver().update(mCurrentProductUri, contentValues, null, null);
+                } catch (IllegalArgumentException e) {
+                    Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            }
+
+            // Display Toast after change was made.
+            if (newUri != null || rowsAffected > 0) {
+                Toast.makeText(getApplicationContext(), R.string.product_saved, Toast.LENGTH_LONG).show();
+                finish();
+            } else {
+                Toast.makeText(getApplicationContext(), R.string.error_product_saving, Toast.LENGTH_LONG).show();
             }
         }
     }
