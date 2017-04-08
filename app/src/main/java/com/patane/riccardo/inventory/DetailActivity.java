@@ -23,6 +23,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
@@ -51,13 +52,15 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     private EditText mSupplierEditText;
     private ImageView mImageView;
     private Uri mCurrentProductUri;
-    private String imagePath;
+    private String dbImagePath;
     private TextView mClickHere;
+    private String mChange;
 
     private static final int CAMERA_REQUEST = 1555;
     private static final int PICK_IMAGE = 34;
     private final int LOADER_ID = 6;
     private final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 4646;
+    private final int TRANSPARENT = 0x00000000;
 
     // variable to notify if field have changed.
     private boolean mProductHasChanged = false;
@@ -192,17 +195,17 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             // SDK < API11
             if (Build.VERSION.SDK_INT < 11) {
                 Log.v(LOG_TAG, "VERSION < 11");
-                imagePath = RealPathUtils.getRealPathFromURI_BelowAPI11(this, data.getData());
+                dbImagePath = RealPathUtils.getRealPathFromURI_BelowAPI11(this, data.getData());
             }
                 // SDK >= 11 && SDK < 19
             else if (Build.VERSION.SDK_INT < 19) {
                 Log.v(LOG_TAG, "VERSION 11-18");
-                imagePath = RealPathUtils.getRealPathFromURI_API11to18(this, data.getData());
+                dbImagePath = RealPathUtils.getRealPathFromURI_API11to18(this, data.getData());
             }
                 // SDK > 19 (Android 4.4)
             else{
                 Log.v(LOG_TAG, "VERSION 19+");
-                imagePath = RealPathUtils.getRealPathFromURI_API19(this, data.getData());
+                dbImagePath = RealPathUtils.getRealPathFromURI_API19(this, data.getData());
             }
 
             loadImageFromFile();
@@ -244,7 +247,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 storageDir      /* directory */
         );
         // Save a file: path for use with ACTION_VIEW intents
-        imagePath = image.getAbsolutePath();
+        dbImagePath = image.getAbsolutePath();
         return image;
     }
 
@@ -369,7 +372,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             contentValues.put(ProductEntry.COLUMN_QUANTITY, quantityString);
             contentValues.put(ProductEntry.COLUMN_PRICE, priceString);
             contentValues.put(ProductEntry.COLUMN_SUPPLIER, supplierString);
-            contentValues.put(ProductEntry.COLUMN_IMAGE, imagePath);
+            contentValues.put(ProductEntry.COLUMN_IMAGE, dbImagePath);
 
             Uri newUri = null;
             int rowsAffected = 0;
@@ -434,6 +437,36 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         deleteAlertDialog.show();
     }
 
+    public void orderIntent(View v) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("How many pcs?");
+
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        builder.setView(input);
+
+        builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                mChange = input.getText().toString();
+                Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+                emailIntent.setType("*/*");
+                emailIntent.setData(Uri.parse("mailto:"));
+                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Ordering " + mChange + " pcs. of " + mNameEditText.getText());
+                if (emailIntent.resolveActivity(getPackageManager()) != null) {
+                    startActivity(emailIntent);
+                }
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+    }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
@@ -459,24 +492,24 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             int imageColumnIndx = data.getColumnIndex(ProductEntry.COLUMN_IMAGE);
 
             // Extract out the value from the Cursor for the given column index
-            String name = data.getString(nameColumnIndex);
-            int quantiy = data.getInt(quantityColumnIndex);
-            float price = data.getFloat(priceColumnIndex);
-            String supplier = data.getString(supplierColumnIndex);
-            imagePath = data.getString(imageColumnIndx);
+            String dbName = data.getString(nameColumnIndex);
+            int dbQuantiy = data.getInt(quantityColumnIndex);
+            float dbPrice = data.getFloat(priceColumnIndex);
+            String dbSupplier = data.getString(supplierColumnIndex);
+            dbImagePath = data.getString(imageColumnIndx);
 
             // Update the views on the screen with the values from the database
-            mNameEditText.setText(name);
-            mQuantityEditText.setText(quantiy + "");
-            mPriceEditText.setText(String.valueOf(price));
-            mSupplierEditText.setText(supplier);
+            mNameEditText.setText(dbName);
+            mQuantityEditText.setText(dbQuantiy + "");
+            mPriceEditText.setText(String.valueOf(dbPrice));
+            mSupplierEditText.setText(dbSupplier);
             loadImageFromFile();
             // TODO: image does not show when storage permission is off!
         }
     }
 
     private void loadImageFromFile() {
-        if (imagePath != null) {
+        if (dbImagePath != null) {
 
             // Get the dimensions of the View
             int targetW = mImageView.getWidth();
@@ -485,7 +518,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             // Get the dimensions of the bitmap
             BitmapFactory.Options bmOptions = new BitmapFactory.Options();
             bmOptions.inJustDecodeBounds = true;
-            BitmapFactory.decodeFile(imagePath, bmOptions);
+            BitmapFactory.decodeFile(dbImagePath, bmOptions);
             int photoW = bmOptions.outWidth;
             int photoH = bmOptions.outHeight;
 
@@ -497,8 +530,8 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             bmOptions.inSampleSize = scaleFactor;
             bmOptions.inPurgeable = true;
 
-            Bitmap bitmap = BitmapFactory.decodeFile(imagePath, bmOptions);
-            mImageView.setBackgroundColor(0x00000000);
+            Bitmap bitmap = BitmapFactory.decodeFile(dbImagePath, bmOptions);
+            mImageView.setBackgroundColor(TRANSPARENT);
             mClickHere.setVisibility(View.INVISIBLE);
             mImageView.setImageBitmap(bitmap);
             mImageView.setOnClickListener(fotoClickListener);

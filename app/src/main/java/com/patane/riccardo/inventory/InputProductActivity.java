@@ -161,7 +161,11 @@ public class InputProductActivity extends AppCompatActivity {
 
 
         Uri newUri = null;
-        newUri = getContentResolver().insert(ProductEntry.CONTENT_URI, contentValues);
+        try {
+            newUri = getContentResolver().insert(ProductEntry.CONTENT_URI, contentValues);
+        } catch (IllegalArgumentException e) {
+            Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+        }
 
         if (newUri != null) {
             Toast.makeText(getApplicationContext(), R.string.product_saved, Toast.LENGTH_LONG).show();
