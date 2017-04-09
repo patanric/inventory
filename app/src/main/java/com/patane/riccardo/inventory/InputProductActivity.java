@@ -1,6 +1,7 @@
 package com.patane.riccardo.inventory;
 
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
@@ -8,12 +9,15 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.app.NavUtils;
 import android.support.v4.content.FileProvider;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -37,7 +41,32 @@ public class InputProductActivity extends AppCompatActivity {
     private EditText mQuantityEditText;
     private EditText mPriceEditText;
     private EditText mSupplierEditText;
+    private Button pictureButton;
     private String mCurrentPhotoPath;
+
+    // variable to notify if field have changed.
+    private boolean mProductHasChanged = false;
+    private View.OnTouchListener mTouchListener = new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            mProductHasChanged = true;
+            return false;
+        }
+    };
+
+    private DialogInterface.OnClickListener keepButtonClickListener = new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            // User clicked the "Keep editing" button, so dismiss the dialog
+            // and continue editing the pet.
+            if (dialog != null) {
+                dialog.dismiss();
+            }
+        }
+    };
+
+    // End of class variables
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,7 +75,8 @@ public class InputProductActivity extends AppCompatActivity {
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         mImageView = (ImageView) findViewById(R.id.picture);
-        Button pictureButton = (Button) findViewById(R.id.take_picture);
+        pictureButton = (Button) findViewById(R.id.take_picture);
+        pictureButton.setOnTouchListener(mTouchListener);
         pictureButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -71,9 +101,13 @@ public class InputProductActivity extends AppCompatActivity {
         });
 
         mNameEditText = (EditText) findViewById(R.id.input_product_name);
+        mNameEditText.setOnTouchListener(mTouchListener);
         mQuantityEditText = (EditText) findViewById(R.id.input_quantity);
+        mQuantityEditText.setOnTouchListener(mTouchListener);
         mPriceEditText = (EditText) findViewById(R.id.input_price);
+        mPriceEditText.setOnTouchListener(mTouchListener);
         mSupplierEditText = (EditText) findViewById(R.id.input_supplier);
+        mSupplierEditText.setOnTouchListener(mTouchListener);
 
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
     }
@@ -138,12 +172,63 @@ public class InputProductActivity extends AppCompatActivity {
                 saveProduct();
                 finish();
                 return true;
-            case R.id.home:
-                // TODO
+            case android.R.id.home:
+                // If the pet hasn't changed, continue with navigating up to parent activity
+                // which is the {@link CatalogActivity}.
+                if (!mProductHasChanged) {
+                    NavUtils.navigateUpFromSameTask(this);
+                    return true;
+                }
+                // Otherwise if there are unsaved changes, setup a dialog to warn the user.
+                // Create a click listener to handle the user confirming that
+                // changes should be discarded.
+                DialogInterface.OnClickListener buttonClickListener = new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // User clicked "Discard" button, navigate to parent activity.
+                        NavUtils.navigateUpFromSameTask(InputProductActivity.this);
+                    }
+                };
+                // Show a dialog that notifies the user they have unsaved changes
+                showUnsavedChangesDialog(buttonClickListener);
                 return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        // If the pet hasn't changed, continue with handling back button press
+        if (!mProductHasChanged) {
+            super.onBackPressed();
+            return;
+        }
+
+        // Otherwise if there are unsaved changes, setup a dialog to warn the user.
+        // Create a click listener to handle the user confirming that changes should be discarded.
+        DialogInterface.OnClickListener buttonClickListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // User clicked "Discard" button, close the current activity.
+                finish();
+            }
+        };
+
+        showUnsavedChangesDialog(buttonClickListener);
+    }
+
+    // create a "discard changes" dialog:
+    private void showUnsavedChangesDialog(DialogInterface.OnClickListener discardButtonClickListener) {
+        // Create an AlertDialog.Builder and set the message, and click listeners
+        // for the positive and negative buttons on the dialog.
+        AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder.setMessage("Discard your changes and quit editing?");
+        dialogBuilder.setPositiveButton("Discard", discardButtonClickListener);
+        dialogBuilder.setNegativeButton("Keep editing", keepButtonClickListener);
+        // Create and show the AlertDialog
+        AlertDialog alertDialog = dialogBuilder.create();
+        alertDialog.show();
     }
 
     private void saveProduct() {
