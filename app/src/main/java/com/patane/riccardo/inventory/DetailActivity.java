@@ -135,6 +135,38 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     };
     // END of class variables
 
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_detail);
+
+        mNameEditText = (EditText) findViewById(R.id.product_name);
+        mNameEditText.setOnTouchListener(mTouchListener);
+        mQuantityEditText = (EditText) findViewById(R.id.detail_quantity);
+        mQuantityEditText.setOnTouchListener(mTouchListener);
+        mPriceEditText = (EditText) findViewById(R.id.detail_price);
+        mPriceEditText.setOnTouchListener(mTouchListener);
+        mSupplierEditText = (EditText) findViewById(R.id.detail_supplier);
+        mSupplierEditText.setOnTouchListener(mTouchListener);
+
+        mImageView = (ImageView) findViewById(R.id.detail_image);
+//        mImageView.measure(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+        mClickHere = (TextView) findViewById(R.id.detail_add_pic);
+        mClickHere.setOnClickListener(fotoClickListener);
+
+        mCurrentProductUri = getIntent().getData();
+        if (mCurrentProductUri == null) {
+            setTitle(getResources().getString(R.string.detail_activity_title_new_product));
+            // Invalidate the options menu, so the "Delete" menu option can be hidden.
+            // (It doesn't make sense to delete a pet that hasn't been created yet.)
+            invalidateOptionsMenu();
+        } else {
+            setTitle(getResources().getString(R.string.detail_activity_title_edit_product));
+            getLoaderManager().initLoader(LOADER_ID, null, this);
+        }
+    }
+
     private void pickCamera() {
         Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
@@ -159,64 +191,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE);
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_detail);
-
-        mCurrentProductUri = getIntent().getData();
-        if (mCurrentProductUri == null) {
-            setTitle(getResources().getString(R.string.detail_activity_title_new_product));
-            // Invalidate the options menu, so the "Delete" menu option can be hidden.
-            // (It doesn't make sense to delete a pet that hasn't been created yet.)
-            invalidateOptionsMenu();
-        } else {
-            setTitle(getResources().getString(R.string.detail_activity_title_edit_product));
-            getLoaderManager().initLoader(LOADER_ID, null, this);
-        }
-
-        mNameEditText = (EditText) findViewById(R.id.product_name);
-        mNameEditText.setOnTouchListener(mTouchListener);
-        mQuantityEditText = (EditText) findViewById(R.id.detail_quantity);
-        mQuantityEditText.setOnTouchListener(mTouchListener);
-        mPriceEditText = (EditText) findViewById(R.id.detail_price);
-        mPriceEditText.setOnTouchListener(mTouchListener);
-        mSupplierEditText = (EditText) findViewById(R.id.detail_supplier);
-        mSupplierEditText.setOnTouchListener(mTouchListener);
-
-        mImageView = (ImageView) findViewById(R.id.detail_image);
-        mImageView.measure(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-        mClickHere = (TextView) findViewById(R.id.detail_add_pic);
-        mClickHere.setOnClickListener(fotoClickListener);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == CAMERA_REQUEST && resultCode == RESULT_OK) {
-            loadImageFromFile();
-        }
-        if (requestCode == PICK_IMAGE && resultCode == RESULT_OK) {
-
-            // SDK < API11
-            if (Build.VERSION.SDK_INT < 11) {
-                Log.v(LOG_TAG, "VERSION < 11");
-                dbImagePath = RealPathUtils.getRealPathFromURI_BelowAPI11(this, data.getData());
-            }
-                // SDK >= 11 && SDK < 19
-            else if (Build.VERSION.SDK_INT < 19) {
-                Log.v(LOG_TAG, "VERSION 11-18");
-                dbImagePath = RealPathUtils.getRealPathFromURI_API11to18(this, data.getData());
-            }
-                // SDK > 19 (Android 4.4)
-            else{
-                Log.v(LOG_TAG, "VERSION 19+");
-                dbImagePath = RealPathUtils.getRealPathFromURI_API19(this, data.getData());
-            }
-
-            loadImageFromFile();
-        }
     }
 
     @Override
@@ -476,6 +450,33 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     }
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == CAMERA_REQUEST && resultCode == RESULT_OK) {
+            loadImageFromFile();
+        }
+        if (requestCode == PICK_IMAGE && resultCode == RESULT_OK) {
+
+            // SDK < API11
+            if (Build.VERSION.SDK_INT < 11) {
+                Log.v(LOG_TAG, "VERSION < 11");
+                dbImagePath = RealPathUtils.getRealPathFromURI_BelowAPI11(this, data.getData());
+            }
+            // SDK >= 11 && SDK < 19
+            else if (Build.VERSION.SDK_INT < 19) {
+                Log.v(LOG_TAG, "VERSION 11-18");
+                dbImagePath = RealPathUtils.getRealPathFromURI_API11to18(this, data.getData());
+            }
+            // SDK > 19 (Android 4.4)
+            else{
+                Log.v(LOG_TAG, "VERSION 19+");
+                dbImagePath = RealPathUtils.getRealPathFromURI_API19(this, data.getData());
+            }
+
+            loadImageFromFile();
+        }
+    }
+
+    @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         String [] projection = {
                 ProductEntry.COLUMN_NAME,
@@ -519,8 +520,8 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         if (dbImagePath != null) {
 
             // Get the dimensions of the View
-            int targetW = mImageView.getMeasuredWidth();
-            int targetH = mImageView.getMeasuredHeight();
+            int targetW = mImageView.getLayoutParams().width;
+            int targetH = mImageView.getLayoutParams().height;
 
             // Get the dimensions of the bitmap
             BitmapFactory.Options bmOptions = new BitmapFactory.Options();
