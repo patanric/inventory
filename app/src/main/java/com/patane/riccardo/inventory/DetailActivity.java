@@ -11,6 +11,8 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -21,6 +23,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NavUtils;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
@@ -32,6 +35,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,6 +45,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -86,6 +91,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     private View.OnClickListener fotoClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
+            mProductHasChanged = true;
             pickImage();
         }
     };
@@ -181,6 +187,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         mSupplierEditText.setOnTouchListener(mTouchListener);
 
         mImageView = (ImageView) findViewById(R.id.detail_image);
+        mImageView.measure(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
         mClickHere = (TextView) findViewById(R.id.detail_add_pic);
         mClickHere.setOnClickListener(fotoClickListener);
     }
@@ -341,7 +348,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         alertDialog.show();
     }
 
-    // create a "discard changes" dialog:
+    // create a "pick image" dialog:
     private void pickImage() {
         // Create an AlertDialog.Builder and set the message, and click listeners
         // for the positive and negative buttons on the dialog.
@@ -439,7 +446,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
     public void orderIntent(View v) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("How many pcs?");
+        builder.setTitle("How many pieces?");
 
         final EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_NUMBER);
@@ -512,8 +519,8 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         if (dbImagePath != null) {
 
             // Get the dimensions of the View
-            int targetW = mImageView.getWidth();
-            int targetH = mImageView.getHeight();
+            int targetW = mImageView.getMeasuredWidth();
+            int targetH = mImageView.getMeasuredHeight();
 
             // Get the dimensions of the bitmap
             BitmapFactory.Options bmOptions = new BitmapFactory.Options();
@@ -523,6 +530,9 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             int photoH = bmOptions.outHeight;
 
             // Determine how much to scale down the image
+            Log.v(LOG_TAG, "TEST targetW: " + targetW);
+            Log.v(LOG_TAG, "TEST targetH: " + targetH);
+            Log.v(LOG_TAG, "TEST mImageView: " + mImageView);
             int scaleFactor = Math.min(photoW / targetW, photoH / targetH);
 
             // Decode the image file into a Bitmap sized to fill the View
@@ -531,9 +541,38 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             bmOptions.inPurgeable = true;
 
             Bitmap bitmap = BitmapFactory.decodeFile(dbImagePath, bmOptions);
+
+            // rotate bitmap if the orientation is wrong.
+            ExifInterface exif = null;
+            try {
+                exif = new ExifInterface(dbImagePath);
+            } catch (IOException e) {
+                Log.e(LOG_TAG, "ERROR message: " + e.getMessage());
+            }
+            int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
+
+            Bitmap rotatedBitmap = null;
+            if (orientation == ExifInterface.ORIENTATION_ROTATE_90) {
+                Matrix matrix = new Matrix();
+                matrix.postRotate(90);
+                rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                mImageView.setImageBitmap(rotatedBitmap);
+            } else if (orientation == ExifInterface.ORIENTATION_ROTATE_180) {
+                Matrix matrix = new Matrix();
+                matrix.postRotate(180);
+                rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                mImageView.setImageBitmap(rotatedBitmap);
+            } else if (orientation == ExifInterface.ORIENTATION_ROTATE_270) {
+                Matrix matrix = new Matrix();
+                matrix.postRotate(270);
+                rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                mImageView.setImageBitmap(rotatedBitmap);
+            } else {
+                mImageView.setImageBitmap(bitmap);
+            }
+
             mImageView.setBackgroundColor(TRANSPARENT);
             mClickHere.setVisibility(View.INVISIBLE);
-            mImageView.setImageBitmap(bitmap);
             mImageView.setOnClickListener(fotoClickListener);
         }
     }
