@@ -2,13 +2,13 @@
 <resources>
     <string name="app_name">Inventory</string>
     <string name="list_view_item_sale_button">Sale</string>
-    <string name="sell">Sell</string>
+    <string name="minus_1">-1</string>
     <string name="plus_1">+1</string>
     <string name="it_s_a_bit_lonely_here">It\'s a bit lonely here &#8230;</string>
     <string name="get_started_by_adding_a_product">Get started by adding a product</string>
     <string name="product_name">Product name</string>
     <string name="pcs">pcs.</string>
-    <string name="dollar">$</string>
+    <string name="dollar">Price: $ </string>
     <string name="supplier_name">supplier name</string>
     <string name="product_saved">Product saved</string>
     <string name="error_product_saving">Error product saving</string>
@@ -21,4 +21,5 @@
     <string name="detail_activity_title_new_product">New Product</string>
     <string name="detail_activity_title_edit_product">Edit Product</string>
     <string name="order">Order</string>
+    <string name="quantity">%1$d</string>
 </resources>

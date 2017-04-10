@@ -7,6 +7,7 @@ import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -23,7 +24,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NavUtils;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
@@ -33,9 +33,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -45,14 +45,13 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String LOG_TAG = DetailActivity.class.getSimpleName();
 
     private EditText mNameEditText;
-    private EditText mQuantityEditText;
+    private TextView mQuantityTextView;
     private EditText mPriceEditText;
     private EditText mSupplierEditText;
     private ImageView mImageView;
@@ -60,6 +59,8 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     private String dbImagePath;
     private TextView mClickHere;
     private String mChange;
+    private Button mPlusButton;
+    private Button mMinusButton;
 
     private static final int CAMERA_REQUEST = 1555;
     private static final int PICK_IMAGE = 34;
@@ -140,15 +141,20 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         mNameEditText = (EditText) findViewById(R.id.product_name);
         mNameEditText.setOnTouchListener(mTouchListener);
-        mQuantityEditText = (EditText) findViewById(R.id.detail_quantity);
-        mQuantityEditText.setOnTouchListener(mTouchListener);
+        mQuantityTextView = (TextView) findViewById(R.id.detail_quantity);
         mPriceEditText = (EditText) findViewById(R.id.detail_price);
         mPriceEditText.setOnTouchListener(mTouchListener);
         mSupplierEditText = (EditText) findViewById(R.id.detail_supplier);
         mSupplierEditText.setOnTouchListener(mTouchListener);
+
+        mPlusButton = (Button) findViewById(R.id.plus_button);
+        mPlusButton.setOnTouchListener(mTouchListener);
+        mMinusButton = (Button) findViewById(R.id.minus_button);
+        mMinusButton.setOnTouchListener(mTouchListener);
 
         mImageView = (ImageView) findViewById(R.id.detail_image);
 //        mImageView.measure(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
@@ -256,8 +262,9 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         switch (item.getItemId()) {
             // Respond to a click on the "Save" menu option
             case R.id.action_save:
-                saveItem();
-//                finish();
+                if (mProductHasChanged) {
+                    saveItem();
+                } else finish();
                 return true;
             // Respond to a click on the "Delete" menu option
             case R.id.action_delete:
@@ -337,7 +344,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
     private void saveItem() {
         String nameString = mNameEditText.getText().toString().trim();
-        String quantityString = mQuantityEditText.getText().toString().trim();
+        String quantityString = mQuantityTextView.getText().toString().trim();
         String priceString = mPriceEditText.getText().toString().trim();
         String supplierString = mSupplierEditText.getText().toString().trim();
 
@@ -416,6 +423,18 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         });
         AlertDialog deleteAlertDialog = alertDialogBuilder.create();
         deleteAlertDialog.show();
+    }
+
+    public void increaseQuant(View v) {
+        int quant = Integer.parseInt(mQuantityTextView.getText().toString());
+        quant++;
+        mQuantityTextView.setText(String.valueOf(quant));
+    }
+
+    public void reduceQuant(View v) {
+        int quant = Integer.parseInt(mQuantityTextView.getText().toString());
+        quant--;
+        mQuantityTextView.setText(String.valueOf(quant));
     }
 
     public void orderIntent(View v) {
@@ -508,7 +527,8 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
             // Update the views on the screen with the values from the database
             mNameEditText.setText(dbName);
-            mQuantityEditText.setText(dbQuantiy + "");
+            String texxt = getResources().getString(R.string.quantity, dbQuantiy);
+            mQuantityTextView.setText(texxt);
             mPriceEditText.setText(String.valueOf(dbPrice));
             mSupplierEditText.setText(dbSupplier);
             loadImageFromFile();
@@ -581,7 +601,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         mNameEditText.setText(null);
-        mQuantityEditText.setText(null);
+        mQuantityTextView.setText(null);
         mPriceEditText.setText(null);
         mSupplierEditText.setText(null);
     }

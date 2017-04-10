@@ -32,6 +32,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_margin="16dp"
         android:layout_weight="2">
 
         <EditText
@@ -50,10 +51,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/product_name"
-            android:layout_margin="16dp"
             android:orientation="horizontal">
 
-            <EditText
+            <TextView
                 android:id="@+id/detail_quantity"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -64,30 +64,29 @@
                 android:textSize="24sp" />
 
             <TextView
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight=".5"
+                android:layout_marginLeft="8dp"
                 android:text="@string/pcs"
                 android:textSize="24sp" />
 
 
-            <TextView
-                android:layout_width="0dp"
+            <Button
+                android:id="@+id/plus_button"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight=".2"
-                android:gravity="right"
-                android:text="@string/dollar"
-                android:textSize="24sp" />
+                android:layout_marginLeft="12dp"
+                android:onClick="increaseQuant"
+                android:text="@string/plus_1" />
 
-            <EditText
-                android:id="@+id/detail_price"
-                android:layout_width="0dp"
+
+            <Button
+                android:id="@+id/minus_button"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight=".6"
-                android:gravity="left"
-                android:hint="0.00"
-                android:inputType="numberDecimal"
-                android:textSize="24sp" />
+                android:layout_marginLeft="12dp"
+                android:onClick="reduceQuant"
+                android:text="@string/minus_1" />
 
 
         </LinearLayout>
@@ -99,32 +98,23 @@
             android:layout_below="@+id/quantity_price"
             android:orientation="horizontal">
 
-            <View
-                android:layout_width="50dp"
-                android:layout_height="0dp"
-                android:visibility="invisible" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="right"
+                android:text="@string/dollar"
+                android:textSize="24sp" />
 
-            <Button
+            <EditText
+                android:id="@+id/detail_price"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/plus_1" />
-
-            <View
-                android:layout_width="100dp"
-                android:layout_height="0dp"
-                android:visibility="invisible" />
-
-            <Button
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/sell" />
-
-            <View
-                android:layout_width="50dp"
-                android:layout_height="0dp"
-                android:visibility="invisible" />
+                android:gravity="left"
+                android:hint="0.00"
+                android:inputType="numberDecimal"
+                android:selectAllOnFocus="true"
+                android:textSize="24sp" />
 
         </LinearLayout>
 
@@ -135,22 +125,28 @@
             android:layout_marginTop="16dp"
             android:orientation="horizontal">
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Supplier:"
+                android:textSize="16dp" />
+
             <EditText
                 android:id="@+id/detail_supplier"
                 android:layout_width="0dp"
-                android:layout_weight="3"
                 android:layout_height="wrap_content"
+                android:layout_weight="3"
                 android:gravity="center"
                 android:hint="@string/supplier_name"
                 android:inputType="textCapWords"
+                android:maxLines="1"
                 android:textSize="16sp" />
 
             <Button
                 android:id="@+id/detail_order_button"
-                android:onClick="orderIntent"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:onClick="orderIntent"
                 android:text="@string/order" />
 
         </LinearLayout>
