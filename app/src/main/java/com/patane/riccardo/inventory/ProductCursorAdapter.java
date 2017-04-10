@@ -2,7 +2,6 @@ package com.patane.riccardo.inventory;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -54,16 +53,18 @@ public class ProductCursorAdapter extends CursorAdapter {
      */
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
-        TextView nameTextView = (TextView) view.findViewById(R.id.name);
-        TextView quantityTextView = (TextView) view.findViewById(R.id.quantity);
-        TextView priceTextView = (TextView) view.findViewById(R.id.price);
+        TextView nameTextView = (TextView) view.findViewById(R.id.list_name);
+        TextView quantityTextView = (TextView) view.findViewById(R.id.list_quantity);
+        TextView priceTextView = (TextView) view.findViewById(R.id.list_price);
 
         String name = cursor.getString(cursor.getColumnIndexOrThrow(ProductEntry.COLUMN_NAME));
-        String quantity = cursor.getString(cursor.getColumnIndexOrThrow(ProductEntry.COLUMN_QUANTITY));
-        String price = cursor.getString(cursor.getColumnIndexOrThrow(ProductEntry.COLUMN_PRICE));
+        int oldQuantity = cursor.getInt(cursor.getColumnIndexOrThrow(ProductEntry.COLUMN_QUANTITY));
+        String quant = context.getResources().getString(R.string.pieces, oldQuantity);
+        float oldPrice = cursor.getFloat(cursor.getColumnIndexOrThrow(ProductEntry.COLUMN_PRICE));
+        String price = context.getResources().getString(R.string.price, oldPrice);
 
         nameTextView.setText(name);
-        quantityTextView.setText(quantity);
+        quantityTextView.setText(quant);
         priceTextView.setText(price);
     }
 }

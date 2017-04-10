@@ -22,4 +22,6 @@
     <string name="detail_activity_title_edit_product">Edit Product</string>
     <string name="order">Order</string>
     <string name="quantity">%1$d</string>
+    <string name="pieces">%1$d pcs.</string>
+    <string name="price">$ %.2f</string>
 </resources>

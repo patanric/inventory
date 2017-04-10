@@ -41,10 +41,10 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:gravity="center"
-            android:hint="@string/product_name"
             android:inputType="textCapWords"
             android:maxLines="1"
-            android:textSize="36dp" />
+            android:textSize="36dp"
+            tools:text="Product Name" />
 
         <LinearLayout
             android:id="@+id/quantity_price"
@@ -59,9 +59,9 @@
                 android:layout_height="wrap_content"
                 android:layout_weight=".5"
                 android:gravity="right"
-                android:hint="0"
                 android:inputType="number"
-                android:textSize="24sp" />
+                android:textSize="24sp"
+                tools:text="0" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -111,10 +111,10 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:gravity="left"
-                android:hint="0.00"
                 android:inputType="numberDecimal"
                 android:selectAllOnFocus="true"
-                android:textSize="24sp" />
+                android:textSize="24sp"
+                tools:text="0.00" />
 
         </LinearLayout>
 
@@ -137,7 +137,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="3"
                 android:gravity="center"
-                android:hint="@string/supplier_name"
+                tools:text="@string/supplier_name"
                 android:inputType="textCapWords"
                 android:maxLines="1"
                 android:textSize="16sp" />

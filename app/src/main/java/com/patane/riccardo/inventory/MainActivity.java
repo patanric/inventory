@@ -78,4 +78,9 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     public void onLoaderReset(Loader<Cursor> loader) {
         productCursorAdapter.swapCursor(null);
     }
+
+    public void trackSale(View v) {
+
+    }
+
 }
