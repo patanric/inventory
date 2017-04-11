@@ -2,18 +2,26 @@ package com.patane.riccardo.inventory;
 
 import android.app.LoaderManager;
 import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.CursorLoader;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.text.InputType;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.patane.riccardo.inventory.data.ProductContract.ProductEntry;
 
@@ -79,8 +87,66 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         productCursorAdapter.swapCursor(null);
     }
 
-    public void trackSale(View v) {
 
+    public void trackSale(final View v) {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("T: How many pieces?");
+
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        builder.setView(input);
+
+        builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                safeSale(input.getText().toString(), Integer.parseInt(v.getTag().toString()));
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+
+    }
+
+    private void safeSale(String input, int which) {
+        TextView quantTextView = (TextView) findViewById(R.id.list_quantity);
+        // TODO: take the quantity of the current listview item and not the first!!!
+        Log.v(LOG_TAG, "TEST quantTextView: " + quantTextView);
+        String piecesRaw = quantTextView.getText().toString();
+        Log.v(LOG_TAG, "TEST pieces: " + piecesRaw);
+        int pieces = Integer.parseInt(piecesRaw.substring(0, piecesRaw.length()-5));
+
+        if (TextUtils.isEmpty(input)) {
+        } else {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(ProductEntry.COLUMN_QUANTITY, pieces-Integer.parseInt(input));
+
+            Uri currentUri = Uri.withAppendedPath(ProductEntry.CONTENT_URI, String.valueOf(which+1));
+            Log.v(LOG_TAG, "TEST which: " + which);
+            Log.v(LOG_TAG, "TEST currentUri: " + currentUri);
+            int rowsAffected = 0;
+
+            try {
+                rowsAffected = getContentResolver().update(currentUri, contentValues, null, null);
+            } catch (IllegalArgumentException e) {
+                Log.e(LOG_TAG, "TEST message: " + e.getMessage());
+                Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+
+            // Display Toast after change was made.
+            if (rowsAffected > 0) {
+                Toast.makeText(getApplicationContext(), R.string.product_saved, Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(getApplicationContext(), R.string.error_product_saving, Toast.LENGTH_LONG).show();
+            }
+
+        }
     }
 
 }

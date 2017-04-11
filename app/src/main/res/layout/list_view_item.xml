@@ -30,6 +30,7 @@
         tools:text="$ 10.00" />
 
     <Button
+        android:id="@+id/list_sale_button"
         android:onClick="trackSale"
         android:layout_marginLeft="12dp"
         android:layout_width="wrap_content"
