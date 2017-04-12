@@ -117,9 +117,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     private void safeSale(View view, String input, int which) {
         TextView quantTextView = (TextView) ((View) view.getParent()).findViewById(R.id.list_quantity);
         // TODO: take the quantity of the current listview item and not the first!!!
-        Log.v(LOG_TAG, "TEST quantTextView: " + quantTextView);
         String piecesRaw = quantTextView.getText().toString();
-        Log.v(LOG_TAG, "TEST pieces: " + piecesRaw);
         int pieces = Integer.parseInt(piecesRaw.substring(0, piecesRaw.length()-5));
 
         if (TextUtils.isEmpty(input)) {
@@ -128,15 +126,11 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             contentValues.put(ProductEntry.COLUMN_QUANTITY, pieces-Integer.parseInt(input));
 
             Uri currentUri = Uri.withAppendedPath(ProductEntry.CONTENT_URI, String.valueOf(which+1));
-            Log.v(LOG_TAG, "TEST which: " + which);
-            Log.v(LOG_TAG, "TEST currentUri: " + currentUri);
             int rowsAffected = 0;
 
             try {
                 rowsAffected = getContentResolver().update(currentUri, contentValues, null, null);
-                Log.v(LOG_TAG, "TEST rowsAffected: " + rowsAffected);
             } catch (IllegalArgumentException e) {
-                Log.e(LOG_TAG, "TEST message: " + e.getMessage());
                 Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
             }
 
