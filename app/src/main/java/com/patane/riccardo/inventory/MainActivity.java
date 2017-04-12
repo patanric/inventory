@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     public void trackSale(final View v) {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("T: How many pieces?");
+        builder.setTitle("How many pieces?");
 
         final EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_NUMBER);
@@ -116,7 +116,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     private void safeSale(View view, String input, int which) {
         TextView quantTextView = (TextView) ((View) view.getParent()).findViewById(R.id.list_quantity);
-        // TODO: take the quantity of the current listview item and not the first!!!
         String piecesRaw = quantTextView.getText().toString();
         int pieces = Integer.parseInt(piecesRaw.substring(0, piecesRaw.length()-5));
 
