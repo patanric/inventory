@@ -71,10 +71,4 @@ public class ProductCursorAdapter extends CursorAdapter {
         priceTextView.setText(price);
     }
 
-//    @Override
-//    public View getView(int position, View convertView, ViewGroup parent) {
-//        Button saleButton = (Button) convertView.findViewById(R.id.list_sale_button);
-//        saleButton.setTag(position);
-//        return saleButton;
-//    }
 }

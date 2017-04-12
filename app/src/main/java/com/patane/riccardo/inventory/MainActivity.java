@@ -100,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                safeSale(input.getText().toString(), Integer.parseInt(v.getTag().toString()));
+                safeSale(v, input.getText().toString(), Integer.parseInt(v.getTag().toString()));
             }
         });
         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -114,8 +114,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     }
 
-    private void safeSale(String input, int which) {
-        TextView quantTextView = (TextView) findViewById(R.id.list_quantity);
+    private void safeSale(View view, String input, int which) {
+        TextView quantTextView = (TextView) ((View) view.getParent()).findViewById(R.id.list_quantity);
         // TODO: take the quantity of the current listview item and not the first!!!
         Log.v(LOG_TAG, "TEST quantTextView: " + quantTextView);
         String piecesRaw = quantTextView.getText().toString();
@@ -134,6 +134,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
             try {
                 rowsAffected = getContentResolver().update(currentUri, contentValues, null, null);
+                Log.v(LOG_TAG, "TEST rowsAffected: " + rowsAffected);
             } catch (IllegalArgumentException e) {
                 Log.e(LOG_TAG, "TEST message: " + e.getMessage());
                 Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
